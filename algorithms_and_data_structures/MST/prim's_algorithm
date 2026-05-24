@@ -1,0 +1,173 @@
+#dokonczone
+import graf_mst
+class Vertex:
+    def __init__(self, key, color=None):
+        self.key = key
+        self.color = color
+        
+    def __eq__(self, other):
+        return self.key == other.key
+    
+    def __hash__(self):
+        return hash(self.key)
+    
+    def __str__(self):
+        return str(self.key)
+    
+    def get_color(self):
+        return self.color
+    
+    def set_color(self,color):
+        self.color = color
+    
+class Edge:
+    def __init__(self, weight=1):
+        self.weight = weight
+    
+    def __str__(self):
+        return str(self.weight)
+            
+class NLGraph:
+    def __init__(self):
+        self.map = {}
+        self.vertices = []
+        self.neighlist = [] 
+     
+    def insertVertex(self, vertex : Vertex):
+        
+        if not hash(vertex) in self.map:
+            self.map[hash(vertex)] = len(self.vertices)
+            self.vertices.append(vertex) 
+            self.neighlist.append([])
+        
+    def insertEdge(self, vertex1 : Vertex, vertex2 : Vertex, edge : Edge):
+        if not (hash(vertex1) in self.map and hash(vertex2) in self.map):
+            raise ValueError
+        index1 = self.map[hash(vertex1)]
+        index2 = self.map[hash(vertex2)]
+        
+        if not any([elem[0]==index2 for elem in self.neighlist[index1]]):
+            self.neighlist[index1].append((index2,edge))
+            self.neighlist[index2].append((index1,edge))
+        
+    def deleteVertex(self, vertex : Vertex):
+        if not(hash(vertex) in self.map):
+            raise ValueError
+        index = self.map[hash(vertex)]
+        self.map.pop(hash(vertex))
+        self.vertices.pop(index)
+        self.neighlist.pop(index)
+        popflags = []
+        for v in range(len(self.neighlist)): 
+            for i in range (len(self.neighlist[v])):
+                if self.neighlist[v][i][0] == index:
+                    popflags.append((v,i))
+                elif self.neighlist[v][i][0] > index:
+                    self.neighlist[v][i] = (self.neighlist[v][i][0] - 1,self.neighlist[v][i][1])
+        for elem in popflags:
+            self.neighlist[elem[0]].pop(elem[1])        
+        for key,value in self.map.items(): 
+            if value > index:
+                self.map[key] = value-1
+        
+    def deleteEdge(self, vertex1 : Vertex, vertex2 : Vertex):
+        if not (hash(vertex1) in self.map and hash(vertex2) in self.map):
+            raise ValueError
+        index1 = self.map[hash(vertex1)]
+        index2 = self.map[hash(vertex2)]
+        if not any([elem[0]==index2 for elem in self.neighlist[index1]]):
+            raise ValueError
+        for neighbour in self.neighlist[index1]:
+            if neighbour[0] == index2:
+                self.neighlist[index1].remove(neighbour)
+        for neighbour in self.neighlist[index2]:
+            if neighbour[0] == index1:
+                self.neighlist[index2].remove(neighbour)
+        
+    def getVertexIdx(self, vertex : Vertex):
+        return self.map.get(hash(vertex),None)
+            
+    def getVertex(self, vertex_idx):
+        if not (isinstance(vertex_idx,int) and vertex_idx >= 0 and vertex_idx < len(self.vertices)):
+            raise ValueError
+        return self.vertices[vertex_idx]
+                
+    def neighbours(self, vertex_idx):
+        if not (isinstance(vertex_idx,int) and vertex_idx >= 0 and vertex_idx < len(self.vertices)):
+            raise ValueError
+        return self.neighlist[vertex_idx]
+    
+    def order(self):
+        return len(self.vertices)
+    
+    def size(self):
+        size = 0
+        for elem in self.neighlist:
+            size += len(elem)
+        return size/2 
+               
+    def edges(self):
+        edges=[]
+        for i in range (len(self.neighlist)):
+            for neighbour in self.neighlist[i]:
+                key1 = self.getVertex(i).key
+                key2 = self.getVertex(neighbour[0]).key
+                if not (key2, key1) in edges:
+                    edges.append((key1, key2))
+        return edges
+    
+def PrimMST(G : NLGraph):
+    order = G.order()
+    intree = [0 for _ in range(order)]
+    distance = [float('inf') for _ in range(order)]
+    parent = [-1 for _ in range(order)]
+    length = 0
+    MST = NLGraph()
+    for i in range(order):
+        vertex=G.getVertex(i)
+        MST.insertVertex(vertex)
+    curr = 0
+    while intree[curr] == 0:
+        intree[curr] = 1
+        neighbours = G.neighbours(curr)
+        for neighbour in neighbours:
+            index = neighbour[0]
+            weight = neighbour[1].weight
+            if weight < distance[index]:
+                distance[index] = weight
+                parent[index] = curr
+        min_distance = float('inf')
+        for i in range(order):
+            if intree[i]==0 and distance[i] < min_distance:
+                min_distance = distance[i]
+                curr = i
+        MST.insertEdge(MST.getVertex(curr), MST.getVertex(parent[curr]), Edge(min_distance))
+        if min_distance != float('inf'): 
+            length+=min_distance 
+    return MST,length
+
+def printGraph(g):
+    n = g.order()
+    print("------GRAPH------",n)
+    for i in range(n):
+        v = g.getVertex(i)
+        print(v, end = " -> ")
+        nbrs = g.neighbours(i)
+        for (j, w) in nbrs:
+            print(g.getVertex(j), w, end=";")
+        print()
+    print("-------------------")
+     
+def main():
+    graf = NLGraph()
+    for vertex1,vertex2,_ in graf_mst.graf:
+        graf.insertVertex(Vertex(vertex1))
+    graf.insertVertex(Vertex('J'))
+    for vertex1,vertex2,weight in graf_mst.graf:
+        graf.insertEdge(Vertex(vertex1), Vertex(vertex2), Edge(weight))
+    prim, length = PrimMST(graf)
+    
+    printGraph(prim)
+
+if __name__ == "__main__":
+    main()
