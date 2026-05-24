@@ -1,0 +1,80 @@
+#dokończone
+
+class Kolejka:
+    
+    def __init__(self,rozmiar = 5):
+        
+        self.tab = [0 for i in range(rozmiar)]
+        self.indeks_odczytu = 0
+        self.indeks_zapisu = 0
+        self.rozmiar = rozmiar
+    
+    def is_empty(self):
+        
+        if self.indeks_odczytu == self.indeks_zapisu:
+            return True
+        else:
+            return False
+    
+    def peek(self):
+        
+        if self.is_empty():
+            return None
+        else:
+            return self.tab[self.indeks_odczytu]
+    
+    def dequeue(self):
+        obecny_indeks = None
+        if not self.is_empty():
+            obecny_indeks = self.tab[self.indeks_odczytu]
+            if self.indeks_odczytu+1 == self.rozmiar:
+                self.indeks_odczytu=0
+            else:
+                self.indeks_odczytu +=1
+        return obecny_indeks
+   
+    def enqueue(self,obecny_indeks):
+        nastepny_indeks = (self.indeks_zapisu +1)% self.rozmiar
+        if nastepny_indeks == self.indeks_odczytu:
+            nowy_rozmiar_listy = self.rozmiar*2
+            nowa_lista = [None]*nowy_rozmiar_listy
+            numer_indeksow_listy = (self.indeks_zapisu - self.indeks_odczytu) %self.rozmiar
+            for i in range(numer_indeksow_listy):
+                nowa_lista[i] = self.tab[(self.indeks_odczytu +i)% self.rozmiar]
+            self.tab = nowa_lista
+            self.indeks_odczytu = 0
+            self.indeks_zapisu = numer_indeksow_listy
+            self.rozmiar = nowy_rozmiar_listy
+        self.tab[self.indeks_zapisu] = obecny_indeks
+        self.indeks_zapisu = (self.indeks_zapisu +1) % self.rozmiar
+    def __str__(self):
+        if self.is_empty():
+            string = "[]"
+        else:
+            temp_indeks = self.indeks_odczytu
+            string = "["
+            while temp_indeks != self.indeks_zapisu:
+                string +="{},".format(self.tab[temp_indeks])
+                temp_indeks += 1
+                if temp_indeks ==self.rozmiar:
+                    temp_indeks = 0
+            string = string[:-2]
+            string += "]"
+        return string
+    def print_tab(self):
+        print(self.tab)
+def main():
+    kolejka_test = Kolejka()
+    for i in range(1,5):
+        kolejka_test.enqueue(i)
+    print(kolejka_test.dequeue())
+    print(kolejka_test.peek())
+    print(kolejka_test)
+    for i in range(5,9):
+        kolejka_test.enqueue(i)
+    kolejka_test.print_tab()
+    while(not kolejka_test.is_empty()):
+        kolejka_test.dequeue()
+    print(kolejka_test)
+if __name__ == "__main__":
+    main()
