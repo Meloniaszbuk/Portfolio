@@ -1,0 +1,127 @@
+#dokonczone
+from collections import defaultdict
+from queue import Queue
+
+class Edge:
+    def __init__(self, capacity, is_residual=False):
+        self.capacity = capacity
+        self.flow = 0
+        self.residual_capacity = capacity if not is_residual else 0
+        self.is_residual = is_residual
+        
+    def __repr__(self):
+        return f"{self.capacity} {self.flow} {self.residual_capacity} {self.is_residual}"
+
+class Graph:
+    def __init__(self):
+        self.graph = defaultdict(dict)
+        
+    def add_edge(self, source, target, capacity):
+        self.graph[source][target] = Edge(capacity)
+        self.graph[target][source] = Edge(capacity, is_residual=True)
+        
+    def get_edge(self, v1, v2):
+        return self.graph[v1][v2]
+        
+    def get_vertices(self):
+        return list(self.graph.keys())
+        
+    def get_neighbors(self, vertex):
+        return list(self.graph[vertex].keys())
+        
+def bfs(graph, source, sink):
+    visited = set()
+    parent = {}
+    queue = Queue()
+    
+    queue.put(source)
+    visited.add(source)
+    
+    while not queue.empty():
+        current = queue.get()
+        if current == sink:
+            break
+            
+        for neighbor in graph.get_neighbors(current):
+            if neighbor not in visited and graph.get_edge(current, neighbor).residual_capacity > 0:
+                queue.put(neighbor)
+                visited.add(neighbor)
+                parent[neighbor] = current
+                
+    return parent
+
+def find_min_capacity(graph, source, sink, parent):
+    if sink not in parent:
+        return 0
+        
+    current = sink
+    min_capacity = float('inf')
+    
+    while current != source:
+        prev = parent[current]
+        edge = graph.get_edge(prev, current)
+        min_capacity = min(min_capacity, edge.residual_capacity)
+        current = prev
+        
+    return min_capacity
+
+def augment_path(graph, source, sink, parent, flow):
+    if flow <= 0:
+        return
+        
+    current = sink
+    while current != source:
+        prev = parent[current]
+        edge = graph.get_edge(prev, current)
+        reverse_edge = graph.get_edge(current, prev)
+        
+        edge.residual_capacity -= flow
+        reverse_edge.residual_capacity += flow
+        
+        if not edge.is_residual:
+            edge.flow += flow
+        else:
+            reverse_edge.flow -= flow
+            
+        current = prev
+
+def ford_fulkerson(graph, source, sink):
+    max_flow = 0
+    
+    while True:
+        parent = bfs(graph, source, sink)
+        if sink not in parent:
+            break
+            
+        path_flow = find_min_capacity(graph, source, sink, parent)
+        augment_path(graph, source, sink, parent, path_flow)
+        max_flow += path_flow
+        
+    return max_flow
+
+def print_graph(graph):
+    for v1 in sorted(graph.get_vertices()):
+        for v2 in sorted(graph.get_neighbors(v1)):
+            edge = graph.get_edge(v1, v2)
+            if not edge.is_residual:
+                print(f"{v1} --({edge})--> {v2}")
+
+def test_graph(edges, source='s', sink='t'):
+    g = Graph()
+    for s, t, c in edges:
+        g.add_edge(s, t, c)
+    
+    max_flow = ford_fulkerson(g, source, sink)
+    print(max_flow)
+    print_graph(g)
+    print()
+
+graf_0 = [('s','u',2), ('u','t',1), ('u','v',3), ('s','v',1), ('v','t',2)]
+graf_1 = [('s','a',16), ('s','c',13), ('c','a',4), ('a','b',12), ('b','c',9),
+          ('b','t',20), ('c','d',14), ('d','b',7), ('d','t',4)]
+graf_2 = [('s','a',3), ('s','c',3), ('a','b',4), ('b','s',3), ('b','c',1),
+          ('b','d',2), ('c','e',6), ('c','d',2), ('d','t',1), ('e','t',9)]
+
+test_graph(graf_0)
+test_graph(graf_1)
+test_graph(graf_2)
