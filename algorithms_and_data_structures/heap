@@ -1,0 +1,94 @@
+#dokończone
+class Element:
+    def __init__(self,data,priority):
+        self.data = data
+        self.priority = priority
+        
+    def __lt__(self,other):
+        return self.priority < other.priority 
+        
+    def __gt__(self,other):
+        return self.priority > other.priority
+        
+    def __str__(self):
+        return "{}:{}".format(self.priority,self.data)
+        
+class Kopiec:
+    def __init__(self,tab =[]):
+        self.tab = tab
+    
+    def is_empty(self):
+        return not bool(self.tab)
+            
+    def peek(self):
+        return self.tab[0].data
+    
+    def parent(self,i):
+        return (i-1)//2
+    
+    def left(self,i):
+        return 2*i +1
+    
+    def right(self,i):
+        return 2*i +2
+        
+    def size(self):
+        return len(self.tab)
+        
+    def dequeue(self):
+        if self.is_empty():
+            raise ValueError
+        element =self.tab[0].data
+        i = 0
+        while True:
+            i_max = len(self.tab) - 1
+            i_left = self.left(i)
+            i_right = self.right(i)
+            if i_left <= i_max and i_right <= i_max:
+                if self.tab[i_left] > self.tab[i_right]:
+                    self.tab[i] = self.tab[i_left]
+                    i = i_left
+                else:
+                    self.tab[i] = self.tab[i_right]
+                    i = i_right
+            elif i_left <= i_max:    
+                self.tab[i] = self.tab[i_left]
+                i = i_left
+            else:
+                self.tab.pop(i)
+                break
+        return element
+                
+    def enqueue(self,priority,data):
+        element = Element(priority,data)
+        i = len(self.tab)
+        self.tab.append(element)
+        while i>0 and self.tab[self.parent(i)] <self.tab[i]:
+            i_parent = self.parent(i)
+            self.tab[i],self.tab[i_parent] = self.tab[i_parent],self.tab[i]
+            i = i_parent
+    
+    def print_tab(self):
+        print ('{', end=' ')
+        print(*self.tab[:len(self.tab)], sep=', ', end = ' ')
+        print( '}')
+        
+    def print_tree(self, idx, lvl):
+        if idx<len(self.tab):           
+            self.print_tree(self.right(idx), lvl+1)
+            print(2*lvl*'  ', self.tab[idx] if self.tab[idx] else None)           
+            self.print_tree(self.left(idx), lvl +1)
+            
+a = Kopiec()
+keys = [7,5,1,2,5,3,4,8,9]
+napis = "GRYMOTYLA"
+for i in range(len(keys)):
+    a.enqueue(keys[i], napis[i])
+a.print_tree(0, 0)
+a.print_tab()
+print(a.dequeue())
+print(a.peek())
+a.print_tab()
+while(not a.is_empty()):
+    print(a.dequeue())
+a.print_tab()    
