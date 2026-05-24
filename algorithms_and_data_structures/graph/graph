@@ -1,0 +1,135 @@
+import polska
+
+class Vertex:
+    def __init__(self, key):
+        self.key = key
+        
+    def __eq__(self, other):
+        return self.key == other.key
+    
+    def __hash__(self):
+        return hash(self.key)
+    
+    def __repr__(self):
+        return f"{self.key}"
+
+class AdjacencyMatrix:
+    def __init__(self, default_value=0):
+        self.matrix = []
+        self.vertex_list = [] 
+        self.default_value = default_value
+        
+    def is_empty(self):
+        return len(self.vertex_list) == 0
+    
+    def insert_vertex(self, vertex):
+        if vertex not in self.vertex_list:
+            self.vertex_list.append(vertex)
+            self.matrix.append([self.default_value] * len(self.vertex_list))
+            for i in range(len(self.vertex_list) - 1):
+                self.matrix[i].append(self.default_value)
+                
+    def insert_edge(self, vertex1, vertex2, edge=1):
+        if vertex1 in self.vertex_list and vertex2 in self.vertex_list:
+            idx1 = self.vertex_list.index(vertex1)
+            idx2 = self.vertex_list.index(vertex2)
+            self.matrix[idx1][idx2] = edge
+            
+    def delete_vertex(self, vertex):
+        if vertex in self.vertex_list:
+            idx = self.vertex_list.index(vertex)
+            self.vertex_list.pop(idx)
+            self.matrix.pop(idx)
+            for i in range(len(self.vertex_list)):
+                self.matrix[i].pop(idx)
+    
+    def delete_edge(self, vertex1, vertex2):
+        if vertex1 in self.vertex_list and vertex2 in self.vertex_list:
+            idx1 = self.vertex_list.index(vertex1)
+            idx2 = self.vertex_list.index(vertex2)
+            self.matrix[idx1][idx2] = self.default_value
+    
+    def get_vertex(self, vertex_id):
+        return self.vertex_list[vertex_id]
+    
+    def vertices(self):
+        for i in range(len(self.vertex_list)):
+            yield i
+    
+    def neighbours(self, vertex_id):
+        for i in range(len(self.vertex_list)):
+            if self.matrix[vertex_id][i] != self.default_value:
+                yield i, self.matrix[vertex_id][i]
+
+class AdjacencyList:
+    def __init__(self):
+        self.neighbours_dict = {}
+        
+    def is_empty(self):
+        return len(self.neighbours_dict) == 0
+    
+    def insert_vertex(self, vertex):
+        if vertex not in self.neighbours_dict:
+            self.neighbours_dict[vertex] = {}
+            
+    def insert_edge(self, vertex1, vertex2, edge=None):
+        if vertex1 in self.neighbours_dict and vertex2 in self.neighbours_dict:
+            self.neighbours_dict[vertex1][vertex2] = edge
+            
+    def delete_vertex(self, vertex):
+        if vertex in self.neighbours_dict:
+            del self.neighbours_dict[vertex]
+            for v in self.neighbours_dict:
+                if vertex in self.neighbours_dict[v]:
+                    del self.neighbours_dict[v][vertex]
+    
+    def delete_edge(self, vertex1, vertex2):
+        if vertex1 in self.neighbours_dict and vertex2 in self.neighbours_dict:
+            if vertex2 in self.neighbours_dict[vertex1]:
+                del self.neighbours_dict[vertex1][vertex2]
+    
+    def get_vertex(self, vertex_id):
+        return vertex_id
+    
+    def vertices(self):
+        for v in self.neighbours_dict:
+            yield v
+    
+    def neighbours(self, vertex_id):
+        for neighbour, edge in self.neighbours_dict[vertex_id].items():
+            yield neighbour, edge
+
+def create_graph(graph_class):
+    g = graph_class()
+    
+    for v1, v2, province in polska.polska:
+        vertex = Vertex(province)
+        g.insert_vertex(vertex)
+    
+    for start, end in polska.graf:
+        g.insert_edge(Vertex(start), Vertex(end))
+    
+    return g
+
+def test_graph(graph_class, title):
+    print(f"\n--- Testing {title} ---")
+    
+    g = create_graph(graph_class)
+    
+    
+    
+    g.delete_vertex(Vertex("K"))
+    
+    
+    g.delete_edge(Vertex("W"), Vertex("E"))
+    
+    
+    polska.draw_map(g)
+
+if __name__ == "__main__":
+    
+    
+    test_graph(AdjacencyMatrix, "Adjacency Matrix")
+    test_graph(AdjacencyList, "Adjacency List")
+    
+    
