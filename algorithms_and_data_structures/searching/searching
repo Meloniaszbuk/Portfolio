@@ -1,0 +1,175 @@
+#dokonczone
+import time
+
+def naive_search(S, W):
+    positions = []
+    comparisons = 0
+    M = len(S)
+    N = len(W)
+    
+    m = 0
+    while m <= M - N:
+        i = 0
+        while i < N:
+            comparisons += 1
+            if S[m + i] != W[i]:
+                break
+            i += 1
+        
+        if i == N:
+            positions.append(m)
+        
+        m += 1
+    
+    return positions, comparisons
+
+def rabin_karp_simple(S, W, d=256, q=101):
+    def hash_func(word, start, length):
+        hw = 0
+        for i in range(length):
+            hw = (hw * d + ord(word[start + i])) % q
+        return hw
+    
+    positions = []
+    comparisons = 0
+    collisions = 0
+    M = len(S)
+    N = len(W)
+    
+    hW = hash_func(W, 0, N)
+    
+    for m in range(M - N + 1):
+        hS = hash_func(S, m, N)
+        comparisons += 1
+        
+        if hS == hW:
+            match = True
+            for i in range(N):
+                if S[m + i] != W[i]:
+                    match = False
+                    collisions += 1
+                    break
+            
+            if match:
+                positions.append(m)
+    
+    return positions, comparisons, collisions
+
+def rabin_karp_rolling(S, W, d=256, q=101):
+    positions = []
+    comparisons = 0
+    collisions = 0
+    M = len(S)
+    N = len(W)
+    
+    h = 1
+    for i in range(N - 1):
+        h = (h * d) % q
+    
+    hW = 0
+    hS = 0
+    for i in range(N):
+        hW = (hW * d + ord(W[i])) % q
+        hS = (hS * d + ord(S[i])) % q
+    
+    for m in range(M - N + 1):
+        comparisons += 1
+        
+        if hS == hW:
+            match = True
+            for i in range(N):
+                if S[m + i] != W[i]:
+                    match = False
+                    collisions += 1
+                    break
+            
+            if match:
+                positions.append(m)
+        
+        if m < M - N:
+            hS = (d * (hS - ord(S[m]) * h) + ord(S[m + N])) % q
+            if hS < 0:
+                hS += q
+    
+    return positions, comparisons, collisions
+
+def kmp_table(W):
+    N = len(W)
+    T = [0] * (N + 1)
+    T[0] = -1
+    
+    pos = 1
+    cnd = 0
+    
+    while pos < N:
+        if W[pos] == W[cnd]:
+            T[pos] = T[cnd]
+        else:
+            T[pos] = cnd
+            while cnd >= 0 and W[pos] != W[cnd]:
+                cnd = T[cnd]
+        
+        pos += 1
+        cnd += 1
+    
+    T[pos] = cnd
+    return T
+
+def kmp_search(S, W):
+    positions = []
+    comparisons = 0
+    M = len(S)
+    N = len(W)
+    
+    T = kmp_table(W)
+    
+    m = 0
+    i = 0
+    
+    while m < M:
+        comparisons += 1
+        
+        if i < N and W[i] == S[m]:
+            m += 1
+            i += 1
+            
+            if i == N:
+                positions.append(m - i)
+                i = T[i]
+        else:
+            i = T[i]
+            if i < 0:
+                m += 1
+                i += 1
+    
+    return positions, comparisons, T
+
+def main():
+    with open("lotr.txt", encoding='utf-8') as f:
+        text = f.readlines()
+    
+    S = ' '.join(text).lower()
+    W = "time."
+    
+    t_start = time.perf_counter()
+    positions, comparisons = naive_search(S, W)
+    t_stop = time.perf_counter()
+    print(f"{len(positions)};{comparisons};{t_stop - t_start:.7f}")
+    
+    t_start = time.perf_counter()
+    positions, comparisons, collisions = rabin_karp_simple(S, W)
+    t_stop = time.perf_counter()
+    print(f"{len(positions)};{comparisons};{collisions};{t_stop - t_start:.7f}")
+    
+    t_start = time.perf_counter()
+    positions, comparisons, collisions = rabin_karp_rolling(S, W)
+    t_stop = time.perf_counter()
+    print(f"{len(positions)};{comparisons};{collisions};{t_stop - t_start:.7f}")
+    
+    t_start = time.perf_counter()
+    positions, comparisons, T = kmp_search(S, W)
+    t_stop = time.perf_counter()
+    print(f"{len(positions)};{comparisons};{T}")
+
+if __name__ == "__main__":
+    main()
