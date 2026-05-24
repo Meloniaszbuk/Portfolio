@@ -1,0 +1,203 @@
+#dokończone
+class Rootnode:
+    def __init__(self,key,data,left = None,right=None):
+        self.key =key
+        self.data = data
+        self.left = left
+        self.right = right
+    
+class Treenode:
+    def __init__(self):
+        self.root = None
+    
+    def search(self,key,node =None):
+        current_value = None
+        if node ==None:
+            node = self.root
+        
+        elif node.key == key:
+            current_value = node.data 
+        else:
+            
+            if node.left != None:
+                current_value = self.search(key,node.left)
+            
+            elif node.right != None and current_value == None:
+                current_value = self.search(key,node.right)
+        return current_value
+        
+    def insert(self,key,data):
+        if self.root == None:
+            self.root = Rootnode(key,data)
+        
+        elif self.root.key == key:
+            self.root.data = data
+        
+        else:
+            current_node = self.root
+            stop_flag = 0
+            while stop_flag ==0:
+                
+                if key< current_node.key:
+                    
+                    if current_node.left ==None:
+                        current_node.left = Rootnode(key,data)
+                        stop_flag = 1
+                    
+                    elif current_node.left.key == key:
+                        current_node.left.data = data
+                        stop_flag = 1
+                    
+                    else:
+                        current_node = current_node.left
+                else:
+                    if current_node.right == None:
+                        current_node.right = Rootnode(key,data)
+                        stop_flag = 1
+                    
+                    elif current_node.right.key ==key:
+                        current_node.right.data = data
+                        stop_flag = 1
+                    
+                    else:
+                        current_node = current_node.right
+    def delete(self,key):
+        node_delete = self.root
+        node_delete_previous  = None
+        node_delete_left = None
+        if self.root ==None:
+            raise ValueError
+        
+        while node_delete.key != key:
+            
+            if key < node_delete.key:
+                node_delete_previous = node_delete
+                node_delete_left = True
+                node_delete = node_delete.left
+            
+            elif node_delete ==None:
+                raise ValueError
+            
+            else:
+                node_delete_previous = node_delete
+                node_delete_left = False
+                node_delete = node_delete.right
+        if node_delete.left ==None and node_delete.right ==None:
+            
+            if node_delete_previous ==None:
+                self.root = None
+            
+            else:
+                if node_delete_left:
+                    node_delete_previous.left = None
+                else:
+                    node_delete_previous.right = None
+        
+        elif node_delete.left ==None or node_delete.right ==None:
+            child_node = None
+            
+            if node_delete.left ==None:
+                child_node == node_delete.left
+            else:
+                child_node = node_delete.left
+            
+            if node_delete_previous ==None:
+                self.root = child_node
+            else:
+                if node_delete_left:
+                    node_delete_previous.left = child_node
+                else:
+                    node_delete_previous = child_node
+        else:
+            child_node = node_delete.right
+            child_node_pointer = node_delete
+            while child_node.left != None:
+                child_node_pointer = child_node
+                child_node = child_node.left
+            child_node.left = node_delete.left 
+            
+            if child_node_pointer != node_delete:
+                child_node_pointer.left = child_node.right
+                child_node.right = node_delete.right
+            
+            elif node_delete_previous ==None:
+                self.root = child_node
+            
+            else:
+                if node_delete_left:
+                    node_delete_previous.left = child_node
+                
+                else:
+                    node_delete_previous.right = child_node
+    
+    def height(self,node = None):
+        if self.root ==None:
+            raise ValueError
+        
+        elif node ==None:
+            node = self.root
+        total_height = 0
+        left_height = 0
+        right_height = 0
+        if node.left != None:
+            left_height = self.height(node.left)+1
+        
+        elif node.right != None:
+            right_height = self.height(node.right) +1
+        
+        total_height+= max(left_height,right_height)
+        return total_height
+        
+    def __str__(self,node=None):
+        if node ==None:
+            node = self.root
+            if node ==None:
+                raise ValueError
+        string = "["
+        if node.left != None:
+            string += self.__str__(node.left)[1:-1]
+            string += ","
+        string += "{}:{},".format(node.key,node.data)
+        if node.right !=None:
+            string += self.__str__(node.right)[1:-1]
+            string += ","
+        string = string[:-2]
+        string += "]"
+        return string
+            
+    def print_tree(self):
+        print("==============")
+        self.__print_tree(self.root, 0)
+        print("==============") 
+                                                                            
+    def __print_tree(self, node, lvl):
+        if node!=None:
+            self.__print_tree(node.right, lvl+5)
+                                                                            
+            print()
+            print(lvl*" ", node.key, node.data)
+     
+            self.__print_tree(node.left, lvl+5)
+def main():
+    tree = Treenode()
+    values = {50:'A', 15:'B', 62:'C', 5:'D', 20:'E', 58:'F', 91:'G', 3:'H', 8:'I', 37:'J', 60:'K', 24:'L'}
+    for value in values.items():
+        tree.insert(value[0],value[1])
+    print(tree)
+    print(tree.search(24))
+    tree.insert(20,"AA")
+    tree.insert(6,"M")
+    tree.delete(62)
+    tree.insert(59,"N")
+    tree.insert(100,"P")
+    tree.delete(8)
+    tree.delete(15)
+    tree.insert(55,"R")
+    tree.delete(50)
+    tree.delete(5)
+    tree.delete(24)
+    print(tree.height())
+    print(tree)
+    tree.print_tree()
+if __name__=="__main__":
+    main()
